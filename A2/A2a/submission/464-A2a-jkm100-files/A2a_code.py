@@ -135,12 +135,8 @@ def plotROC(thresh_min: int = -2, thresh_max: int = 5, resolution: int = 10, sig
     for thresh in thresholds:
         false_positives.append(falsepos(thresh, sigma))
         true_positives.append(1-falseneg(thresh, A, sigma))
-    min_index = np.argmin(false_positives + (1-true_positives))
-    print(thresholds[min_index])
     plt.figure(figsize=(6, 6), dpi=80)
     plt.plot(false_positives, true_positives)
-    plt.plot(false_positives[min_index],
-             true_positives[min_index], markersize=3)
     plt.title(title)
     plt.xlabel("False Positive Rate")
     plt.ylabel("True Positive Rate")
