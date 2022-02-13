@@ -1,8 +1,8 @@
 import math
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib import rc
-rc('text', usetex=True)
+# from matplotlib import rc
+# rc('text', usetex=True)
 
 
 def genwaveform(N=100, alpha=0.4, A=1, sigma=1.0, noisetype="Gaussian"):
@@ -98,11 +98,11 @@ def plotdetectioncounts(signal=[], thresh=1.0, tp=[], fn=[], fp=[], tn=[], title
     plt.show()
 
 
-def falsepos(thresh=1.0, sigma=1.0):
+def falsepos(thresh=1.0, sigma=1.0, noisetype="Gaussian"):
     return 1 - 0.5*(1+math.erf(thresh/(sigma*math.sqrt(2))))
 
 
-def falseneg(thresh=1.0, A=1.0, sigma=1.0):
+def falseneg(thresh=1.0, A=1.0, sigma=1.0, noisetype="Gaussian"):
     return 0.5*(1+math.erf((thresh-A)/(sigma*math.sqrt(2))))
 
 
@@ -127,17 +127,32 @@ def falsenegestimate(N=100, thresh=1.0, A=1.0, sigma=1.0):
 
 
 # N=1000, alpha=0.4, A=1, sigma=1.0, noisetype="Gaussian"
-def plotROC(thresh_min: int = -2, thresh_max: int = 5, resolution: int = 10, sigma=1.0, A=1.0, title="ROC Curve"):
+def plotROC(thresh_min: int = -2, thresh_max: int = 5, alpha=1.0, resolution: int = 10, sigma=1.0, A=1.0, title="ROC Curve"):
+    # creates an array of thresholds to plot over:
     thresholds = np.linspace(
         start=thresh_min, stop=thresh_max, num=resolution*(thresh_max-thresh_min)+1)
-    false_positives = []
-    true_positives = []
+
+    # calculates the number of false negative and positive errors for each:
+    false_positive_rates = []
+    true_positive_rates = []
     for thresh in thresholds:
-        false_positives.append(falsepos(thresh, sigma))
-        true_positives.append(1-falseneg(thresh, A, sigma))
+        false_positive_rates.append(falsepos(thresh, sigma))
+        true_positive_rates.append(1-falseneg(thresh, A, sigma))
+
+    # Calculating the minimum number of errors
+    false_positive_rates = np.array(false_positive_rates)
+    true_positive_rates = np.array(true_positive_rates)
+    min_index = np.argmin((1-alpha)*false_positive_rates +
+                          alpha * (1-true_positive_rates))
+    print(thresholds[min_index])
+
+    # Plotting:
     plt.figure(figsize=(6, 6), dpi=80)
-    plt.plot(false_positives, true_positives)
+    plt.plot(false_positive_rates, true_positive_rates, c="#ccccff")
+    plt.plot(false_positive_rates[min_index],
+             true_positive_rates[min_index], marker='o', markersize=10, c="#4444ff", label="Minimum Number of Errors at $\Theta$={th}".format(th=str(thresholds[min_index])))
     plt.title(title)
     plt.xlabel("False Positive Rate")
     plt.ylabel("True Positive Rate")
+    plt.legend()
     plt.show()

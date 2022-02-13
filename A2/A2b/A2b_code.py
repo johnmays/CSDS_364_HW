@@ -156,6 +156,7 @@ def plotHSPsimulation(lam=100, t1=0.8, t2=2.2, f1=0.8, f2=2.2, s1=1.0, s2=2.0, a
         "Photons in Interval $[f_1, f_2]=[{f_1},{f_2}]$".format(f_1=f1, f_2=f2))
     plt.ylabel("Amplitude")
     plt.xlabel("Time (milliseconds)")
+    plt.xlim((t1, t2))
     plt.ylim((0, 2))
     plt.show()
 
@@ -168,7 +169,8 @@ def plotHSPsimulation(lam=100, t1=0.8, t2=2.2, f1=0.8, f2=2.2, s1=1.0, s2=2.0, a
         s_1=s1, s_2=s2))
     plt.ylabel("Amplitude")
     plt.xlabel("Time (milliseconds)")
-    plt.xlim((s1, s2))
+    # plt.xlim((s1, s2))
+    plt.xlim((t1, t2))
     plt.ylim((0, 2))
     plt.show()
 
@@ -181,7 +183,8 @@ def plotHSPsimulation(lam=100, t1=0.8, t2=2.2, f1=0.8, f2=2.2, s1=1.0, s2=2.0, a
     plt.title("Photons that are Absorbed While Shudder is Open")
     plt.ylabel("Amplitude")
     plt.xlabel("Time (milliseconds)")
-    plt.xlim((s1, s2))
+    # plt.xlim((s1, s2))
+    plt.xlim((t1, t2))
     plt.ylim((0, 2))
     plt.show()
 
