@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import math
 from scipy import stats
 mpl.rcdefaults()
-
+purples = ["#0a0612", "#291749", "#482980", "#673ab7", "#7a52aa", "#9779bd", "#b59fd0", "#d3c5e3"]
 
 def randtimes(N, t1, t2):
     t = []
@@ -193,7 +193,7 @@ def probseeing(I, alpha=0.06, K=6):
     return 1-stats.poisson.cdf(k=(K-1), mu=alpha*I)
 
 
-def plotdetectioncurve(alpha=0.5, K=6):
+def plotdetectioncurve(alpha=0.5, K=6, seperatecurves = True):
     if type(alpha) != list and type(alpha) != np.ndarray:
         alpha = [alpha]
         K = [K]
@@ -205,12 +205,17 @@ def plotdetectioncurve(alpha=0.5, K=6):
         p = []
         for I in np.linspace(0.01, 100, 10000):
             p.append(probseeing(I, alpha=alpha[i], K=K[i]))
-        plt.plot(np.linspace(0.01, 100, 10000), p, c="#ccccff")
+        if seperatecurves:
+            plt.plot(np.linspace(0.01, 100, 10000), p, label="alpha={a}, K={k}".format(a=alpha[i], k=K[i]), c=purples[i])
+        else:
+            plt.plot(np.linspace(0.01, 100, 10000), p, c="#ccccff")
     plt.title("Probability of Detection of a Flash w.r.t. Intensity")
     plt.ylabel("$p$(Detection|Flash)")
     plt.xlabel("Intensity")
     plt.xlim(0.01, 100)
     plt.xscale('log')
+    if seperatecurves:
+        plt.legend()
     plt.show()
 
 
