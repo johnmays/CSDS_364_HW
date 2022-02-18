@@ -5,7 +5,9 @@ import matplotlib.pyplot as plt
 import math
 from scipy import stats
 mpl.rcdefaults()
-purples = ["#0a0612", "#291749", "#482980", "#673ab7", "#7a52aa", "#9779bd", "#b59fd0", "#d3c5e3"]
+purples = ["#0a0612", "#392249", "#482980", "#673ab7",
+           "#7a52aa", "#9779bd", "#b59fd0", "#d3c5e3"]
+
 
 def randtimes(N, t1, t2):
     t = []
@@ -193,7 +195,7 @@ def probseeing(I, alpha=0.06, K=6):
     return 1-stats.poisson.cdf(k=(K-1), mu=alpha*I)
 
 
-def plotdetectioncurve(alpha=0.5, K=6, seperatecurves = True):
+def plotdetectioncurve(alpha=0.5, K=6, seperatecurves=True):
     if type(alpha) != list and type(alpha) != np.ndarray:
         alpha = [alpha]
         K = [K]
@@ -206,7 +208,8 @@ def plotdetectioncurve(alpha=0.5, K=6, seperatecurves = True):
         for I in np.linspace(0.01, 100, 10000):
             p.append(probseeing(I, alpha=alpha[i], K=K[i]))
         if seperatecurves:
-            plt.plot(np.linspace(0.01, 100, 10000), p, label="alpha={a}, K={k}".format(a=alpha[i], k=K[i]), c=purples[i])
+            plt.plot(np.linspace(0.01, 100, 10000), p, label="alpha={a}, K={k}".format(
+                a=alpha[i], k=K[i]), c=purples[i])
         else:
             plt.plot(np.linspace(0.01, 100, 10000), p, c="#ccccff")
     plt.title("Probability of Detection of a Flash w.r.t. Intensity")
@@ -219,12 +222,45 @@ def plotdetectioncurve(alpha=0.5, K=6, seperatecurves = True):
     plt.show()
 
 
+def mse(prob, e_prob):
+    prob = np.array(prob)
+    e_prob = np.array(e_prob)
+    return (1/len(prob))*(prob-e_prob)**2
+
+
+def findfit():
+    alphas = np.linspace(0.00, 10.00, num=1001)
+    Ks = np.linspace(1, 100, num=101)
+    e_alphas = [0.02, 0.13, 24.1, 37.6, 58.6, 91.0, 141.9, 221.3]
+    e_Ks = [2, 12, 0.0, 4.0, 18.0, 54.0, 94.0, 100.0]
+    min_total_mse = None
+    optimal_alpha = None
+    optimal_K = None
+
+    for alpha in alphas:
+        for K in Ks:
+            total_mse = 0
+            prob = []
+            for I in np.linspace(0.01, 100, 10000):
+                prob.append(probseeing(I, alpha=alpha, K=K))
+            for i in range(len(e_alphas)):
+                e_prob = []
+                for I in np.linspace(0.01, 100, 10000):
+                    e_prob.append(probseeing(I, alpha=e_alphas[i], K=e_Ks[i]))
+                total_mse += mse(prob, e_prob)
+            if (total_mse < min_total_mse) or (min_total_mse == None):
+                min_total_mse = total_mse
+                optimal_alpha = alpha
+                optimal_K = K
+    return optimal_alpha, optimal_K
+
+
 def plotfit(alpha=3, K=3):
     plt.figure(figsize=(8, 5), dpi=80)
 
     # first plotting our expiremental results
-    e_alpha = [24.1, 37.6, 58.6, 91.0, 141.9, 221.3]
-    e_K = [0.0, 4.0, 18.0, 54.0, 94.0, 100.0]
+    e_alpha = [0.02, 0.13]
+    e_K = [2, 12]
 
     for i in range(len(e_alpha)):
         e_p = []
@@ -242,7 +278,7 @@ def plotfit(alpha=3, K=3):
         p = []
         for I in np.linspace(0.01, 100, 10000):
             p.append(probseeing(I, alpha=alpha[i], K=K[i]))
-        plt.plot(np.linspace(0.01, 100, 10000), p, c="#8888ff", label="fits")
+        plt.plot(np.linspace(0.01, 100, 10000), p, c="#6666ff", label="fits")
 
     plt.title("Some Fits: Probability of Detection of a Flash w.r.t. Intensity")
     plt.ylabel("$p$(Detection|Flash)")
