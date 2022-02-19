@@ -5,6 +5,8 @@ import matplotlib.pyplot as plt
 import math
 from scipy import stats
 mpl.rcdefaults()
+purples = ["#0a0612", "#392249", "#482980", "#673ab7",
+           "#7a52aa", "#9779bd", "#b59fd0", "#d3c5e3"]
 
 
 def randtimes(N, t1, t2):
@@ -19,7 +21,7 @@ def plotflash(t, t1, t2=None, title="Poisson Distribution of Photons"):
         t2 = np.max(t)
     plt.figure(figsize=(8, 5), dpi=80)
     heads = np.ones(shape=len(t))
-    plt.stem(t, heads, markerfmt=" ")
+    plt.stem(t, heads, markerfmt=" ", linefmt=purples[4], basefmt=" ")
     plt.title(title)
     plt.ylabel("Amplitude")
     plt.xlabel("Time")
@@ -34,7 +36,7 @@ def plotpdfexp(lam=10):
     p = lam * np.exp(-lam*t)
     p = p / np.linalg.norm(p, ord=2)
     plt.figure(figsize=(8, 6), dpi=80)
-    plt.plot(t, p)
+    plt.plot(t, p, c=purples[4])
     plt.title("P.D.F. of Exponential Distribution")
     plt.ylabel("$p(\Delta t | \lambda)$")
     plt.xlabel("$\Delta t$")
@@ -74,7 +76,7 @@ def pdfphotons(K=1, lam=10, T=.100):
 def plotbarpdfphotons(K=np.arange(0, 10), lam=10, T=.100, xlimit=None, title="Probability of observing $n$ events"):
     p = pdfphotons(K=K, lam=lam, T=T)
     plt.figure(figsize=(8, 6), dpi=80)
-    plt.bar(K, p)
+    plt.bar(K, p, color=purples[6])
     plt.title(title)
     plt.ylabel("$p(n | \lambda, T)$")
     plt.xlabel("$n$")
@@ -107,7 +109,7 @@ def plotbarcdfphotons(K: list = np.arange(0, 10), lam=40, T=0.1, xlimit=None, ti
     for k in K:
         p.append(detectionprob(K=k, lam=lam, T=T))
     plt.figure(figsize=(8, 6), dpi=80)
-    plt.bar(K, p)
+    plt.bar(K, p, color=purples[6])
     plt.title(title)
     plt.ylabel("$p(n \geq K| \lambda, T)$")
     plt.xlabel("$K$")
@@ -156,6 +158,7 @@ def plotHSPsimulation(lam=100, t1=0.8, t2=2.2, f1=0.8, f2=2.2, s1=1.0, s2=2.0, a
         "Photons in Interval $[f_1, f_2]=[{f_1},{f_2}]$".format(f_1=f1, f_2=f2))
     plt.ylabel("Amplitude")
     plt.xlabel("Time (milliseconds)")
+    plt.xlim((t1, t2))
     plt.ylim((0, 2))
     plt.show()
 
@@ -168,7 +171,8 @@ def plotHSPsimulation(lam=100, t1=0.8, t2=2.2, f1=0.8, f2=2.2, s1=1.0, s2=2.0, a
         s_1=s1, s_2=s2))
     plt.ylabel("Amplitude")
     plt.xlabel("Time (milliseconds)")
-    plt.xlim((s1, s2))
+    # plt.xlim((s1, s2))
+    plt.xlim((t1, t2))
     plt.ylim((0, 2))
     plt.show()
 
@@ -181,7 +185,8 @@ def plotHSPsimulation(lam=100, t1=0.8, t2=2.2, f1=0.8, f2=2.2, s1=1.0, s2=2.0, a
     plt.title("Photons that are Absorbed While Shudder is Open")
     plt.ylabel("Amplitude")
     plt.xlabel("Time (milliseconds)")
-    plt.xlim((s1, s2))
+    # plt.xlim((s1, s2))
+    plt.xlim((t1, t2))
     plt.ylim((0, 2))
     plt.show()
 
@@ -190,7 +195,10 @@ def probseeing(I, alpha=0.06, K=6):
     return 1-stats.poisson.cdf(k=(K-1), mu=alpha*I)
 
 
-def plotdetectioncurve(alpha=0.5, K=6):
+def plotdetectioncurve(alpha=0.5, K=6, seperatecurves=True, xlimit=(0.01, 100), show_ss=False):
+    HSP_data = [[24.1, 37.6, 58.6, 91.0, 141.9, 221.3],
+                [0.000,  0.040, 0.180, 0.540,  0.940, 1.000]]
+
     if type(alpha) != list and type(alpha) != np.ndarray:
         alpha = [alpha]
         K = [K]
@@ -198,48 +206,109 @@ def plotdetectioncurve(alpha=0.5, K=6):
     # assert type(K) == list or type(K) == np.ndarray
     assert len(K) == len(alpha)
     plt.figure(figsize=(8, 5), dpi=80)
+
+    # plotting the given alpha and K arrays
     for i in range(len(alpha)):
         p = []
-        for I in np.linspace(0.01, 100, 10000):
+        for I in np.linspace(xlimit[0], xlimit[1], 1000):
             p.append(probseeing(I, alpha=alpha[i], K=K[i]))
-        plt.plot(np.linspace(0.01, 100, 10000), p, c="#ccccff")
+        if seperatecurves:
+            plt.plot(np.linspace(xlimit[0], xlimit[1], 1000), p, label="alpha={a}, K={k}".format(
+                a=alpha[i], k=K[i]), c=purples[i])
+        else:
+            plt.plot(np.linspace(0.01, 100, 1000), p, c=purples[6])
+
+    # plotting the HSP data:
+    if show_ss:
+        plt.scatter(HSP_data[0], HSP_data[1], c=purples[6], label="HSP SS")
+
     plt.title("Probability of Detection of a Flash w.r.t. Intensity")
     plt.ylabel("$p$(Detection|Flash)")
     plt.xlabel("Intensity")
-    plt.xlim(0.01, 100)
+    plt.xlim(xlimit[0], xlimit[1])
     plt.xscale('log')
+    if seperatecurves:
+        plt.legend()
     plt.show()
 
 
-def plotfit(alpha=3, K=3):
+def mse(prob, e_prob):
+    prob = np.array(prob)
+    e_prob = np.array(e_prob)
+    return (1/len(prob))*np.sum((prob-e_prob)**2)
+
+
+def findfit():
+    alphas = np.linspace(0.01, 1.00, 101)
+    Ks = np.linspace(1, 12, num=13)
+    e_alphas = [0.02, 0.13]
+    e_Ks = [2, 12]
+    HSP_data = [[24.1, 37.6, 58.6, 91.0, 141.9, 221.3],
+                [0.000,  0.040, 0.180, 0.540,  0.940, 1.000]]
+    min_total_mse = None
+    optimal_alpha = None
+    optimal_K = None
+
+    for alpha in alphas:
+        for K in Ks:
+            # print("on pair " + str(alpha) + "," + str(K))
+            HSP_prob = []
+            for I in HSP_data[0]:
+                HSP_prob.append(probseeing(I, alpha=alpha, K=K))
+            total_mse = mse(HSP_prob, HSP_data[1])
+            prob = []
+            for I in np.linspace(0.01, 100, 100):
+                prob.append(probseeing(I, alpha=alpha, K=K))
+            for i in range(len(e_alphas)):
+                e_prob = []
+                for I in np.linspace(0.01, 100, 100):
+                    e_prob.append(probseeing(I, alpha=e_alphas[i], K=e_Ks[i]))
+                total_mse += mse(prob, e_prob)
+            if (min_total_mse == None) or (total_mse < min_total_mse):
+                min_total_mse = total_mse
+                optimal_alpha = alpha
+                optimal_K = K
+
+    return optimal_alpha, optimal_K
+
+
+def plotfit(alpha=3, K=3, show_fit=True, xlimit=(0.01, 100), show_ss=False):
     plt.figure(figsize=(8, 5), dpi=80)
 
     # first plotting our expiremental results
-    e_alpha = [24.1, 37.6, 58.6, 91.0, 141.9, 221.3]
-    e_K = [0.0, 4.0, 18.0, 54.0, 94.0, 100.0]
+    e_alpha = [0.02, 0.13]
+    e_K = [2, 12]
+    HSP_data = [[24.1, 37.6, 58.6, 91.0, 141.9, 221.3],
+                [0.000,  0.040, 0.180, 0.540,  0.940, 1.000]]
 
     for i in range(len(e_alpha)):
         e_p = []
-        for I in np.linspace(0.01, 100, 10000):
+        for I in np.linspace(xlimit[0], xlimit[1], 10000):
             e_p.append(probseeing(I, alpha=e_alpha[i], K=e_K[i]))
-        plt.plot(np.linspace(0.01, 100, 10000), e_p,
-                 c="#ccccff", label="experimental data")
+        plt.plot(np.linspace(xlimit[0], xlimit[1], 10000), e_p,
+                 c=purples[6], label="experimental data")
+
+    # plotting the HSP data:
+    if show_ss:
+        plt.scatter(HSP_data[0], HSP_data[1], c=purples[4], label="HSP SS")
 
     # then plotting the fitted K values
-    if type(alpha) != list and type(alpha) != np.ndarray:
-        alpha = [alpha]
-        K = [K]
-    assert len(K) == len(alpha)
-    for i in range(len(alpha)):
-        p = []
-        for I in np.linspace(0.01, 100, 10000):
-            p.append(probseeing(I, alpha=alpha[i], K=K[i]))
-        plt.plot(np.linspace(0.01, 100, 10000), p, c="#8888ff", label="fits")
+    if show_fit:
+        if type(alpha) != list and type(alpha) != np.ndarray:
+            alpha = [alpha]
+            K = [K]
+        assert len(K) == len(alpha)
+        for i in range(len(alpha)):
+            p = []
+            for I in np.linspace(xlimit[0], xlimit[1], 10000):
+                p.append(probseeing(I, alpha=alpha[i], K=K[i]))
+            plt.plot(np.linspace(xlimit[0], xlimit[1], 10000),
+                     p, c=purples[1], label="fits")
 
     plt.title("Some Fits: Probability of Detection of a Flash w.r.t. Intensity")
     plt.ylabel("$p$(Detection|Flash)")
     plt.xlabel("Intensity")
-    plt.xlim(0.01, 100)
+    plt.xlim(xlimit[0], xlimit[1])
     plt.xscale('log')
     # Subsequent 3 lines mostly taken from: https://stackoverflow.com/questions/13588920/stop-matplotlib-repeating-labels-in-legend
     handles, labels = plt.gca().get_legend_handles_labels()
