@@ -13,6 +13,12 @@ def sinewave(t, f=1.0, d=0.0):
     phi = 2 * np.pi * d * f
     return np.sin(2 * np.pi * f * t + phi)
 
+def cosinewave(t, f=1.0, d=0.0):
+    if(type(t) == list):
+        t = np.array(t)
+    phi = 2 * np.pi * d * f
+    return np.cos(2 * np.pi * f * t + phi)
+
 
 def plot_sinewave(t, f=4.5, d=1.0):
     figure(figsize=(8, 6), dpi=80)
@@ -109,7 +115,7 @@ def gammatone(t, n: int = 4, f=1.0, phi=0.0):
         t = np.array(t)
     b = 1.019*(24.7*(((4.37*f)/1000) + 1))
     gamma_value = (t**(n-1))*np.exp(-2*np.pi*b*t)*np.cos(2*np.pi*f*t + phi)
-    return gamma_value / np.amax(gamma_value)
+    return gamma_value / np.amax(np.abs(gamma_value))
 
 
 def plot_gammatone(t, f=1.0, xlim=(0, 0.1)):
