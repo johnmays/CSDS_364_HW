@@ -110,12 +110,15 @@ def plot_gabor(t, sigma=4.0, f=1.0, a=1.0):
 # 1c
 
 
-def gammatone(t, n: int = 4, f=1.0, phi=0.0):
+def gammatone(t, n: int = 4, f=1.0, phi=0.0, normalize = False):
     if(type(t) == list):
         t = np.array(t)
     b = 1.019*(24.7*(((4.37*f)/1000) + 1))
     gamma_value = (t**(n-1))*np.exp(-2*np.pi*b*t)*np.cos(2*np.pi*f*t + phi)
-    return gamma_value / np.amax(np.abs(gamma_value))
+    if normalize:
+        return gamma_value / np.amax(np.abs(gamma_value))
+    else: 
+        return gamma_value
 
 
 def plot_gammatone(t, f=1.0, xlim=(0, 0.1)):
