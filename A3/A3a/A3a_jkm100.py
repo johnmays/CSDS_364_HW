@@ -36,6 +36,7 @@ def delta(t, fs=1):
         signal = []
         for time_val in t:
             if (time_val >= center_time_val - 1/(2*fs)) and (time_val < center_time_val + 1/(2*fs)):
+                print("oh" + str(time_val))
                 signal.append(1)
             else:
                 signal.append(0)
@@ -85,19 +86,21 @@ def noisysignal(t, g, tau=0.025, T=0.1, sigma=1):
             if t_val < tau or t_val >= tau + T:
                 signal.append(noise_val)
             else:
-                signal.append(noise_val + g(t_val))
+                signal.append(noise_val + g(t_val-tau))
         return signal
     else: # for single time values t
         noise_val = np.random.normal(loc=0, scale=sigma)
         if t < tau or t >= tau + T:
             return noise_val
         else:
-            return noise_val + g(t)
+            # CHECK
+            if t-tau == 0:
+                print("t-tau is = 0 at t=" + str(t))
+            return noise_val + g(t-tau)
 
-def plotsignal(g=lambda t: noisysignal(1, g = lambda t: u(t)), tlim=(0, 2*math.pi), tscale=1, tunits="secs", title="Signal", show_sampled=False, fs=100):
+def plotsignal(g=lambda t: noisysignal(1, g = lambda t: u(t)), tlim=(0, 2*math.pi), tscale=1, tunits="secs", title="Signal", show_sampled=False, plotfs=1000, fs=10):
     # g should be an anonymized function
-    t = np.linspace(tlim[0], tlim[1], 2001)
-    t = t
+    t = np.linspace(tlim[0], tlim[1], int((tlim[1]-tlim[0])*plotfs+1))
     signal = []
     for t_val in t:
         signal.append(g(t_val))
