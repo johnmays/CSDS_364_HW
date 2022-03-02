@@ -13,3 +13,7 @@ pg.py
 __pycache__/
 *.py[cod]
 *$py.class
+
+# Files that julia seems to want to create:
+**/.toml
+*.toml
