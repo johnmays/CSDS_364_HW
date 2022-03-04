@@ -2,6 +2,7 @@
 import math
 import numpy as np
 import matplotlib.pyplot as plt
+import scipy.io.wavfile as wavfile
 
 # importing A1b_jkm100.py purely for function default kwargs
 import sys
@@ -63,11 +64,18 @@ def u(t):
             return 0
 
 def gensignal(t, g, tau=0.025, T=0.1):
-    signal = g(t-tau)
-    for i in range(len(signal)):
-        if t[i] < tau or t[i] >= tau + T:
-            signal[i] = 0
-    return np.array(signal)
+    if type(t) == list or type(t) == np.ndarray:
+        signal = g(t-tau)
+        for i in range(len(signal)):
+            if t[i] < tau or t[i] >= tau + T:
+                signal[i] = 0
+        return np.array(signal)
+    else:
+        if t < tau or t >= tau + T:
+            return 0
+        else:
+            return g(t-tau)
+
 
 def energy(x):
     return np.linalg.norm(x, ord=2)**2
@@ -144,3 +152,35 @@ def extent(y, theta=0.01):
                 first_thresh_index = i
             last_thresh_index = i
     return first_thresh_index, last_thresh_index    
+
+def compose_sound(filename = "testfile.wav", fmin=10, fmax=10000, sigma=0.1, numgammatones=0):
+    fs = 44100 # Hz
+    T = 3 # seconds
+    t = np.linspace(0, 3, 3*fs+1)
+
+    delays = np.zeros(numgammatones)
+    for i in range(numgammatones):
+        delays[i] = np.random.uniform(0, T)
+    
+    frequencies = np.zeros(numgammatones)
+    for i in range(numgammatones):
+        frequencies[i] = np.random.uniform(fmin, fmax)
+
+    signal = np.zeros(np.size(t))
+    for i in range(np.size(t)):
+        for j in range(numgammatones):
+            signal[i] += gensignal(t[i], g = lambda x: gammatone(x, f=frequencies[j], normalize=False), tau=delays[j], T=T)
+
+    # Normalize the gammatones alone
+    signal = signal/np.max(signal)
+
+    # Add Noise
+    for i in range(np.size(t)):
+        signal[i] += np.random.normal(loc=0, scale=sigma)
+
+    # Normalize again
+    signal = signal/np.max(signal)
+
+    # Write to wave file
+    wavfile.write(filename, fs, signal)
+    return None

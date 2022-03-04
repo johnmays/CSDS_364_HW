@@ -2,6 +2,7 @@
 import math
 import numpy as np
 import matplotlib.pyplot as plt
+import scipy.io.wavfile as wavfile
 
 # importing A1b_jkm100.py purely for function default kwargs
 import sys
@@ -32,13 +33,20 @@ def plot_sampled_function(g=sinewave, fs=1, f=1.0, tlim=(0, 2*math.pi), tscale=1
 
 def delta(t, fs=1):
     center_time_val = 0
-    signal = []
-    for time_val in t:
-        if (time_val >= center_time_val - 1/(2*fs)) and (time_val < center_time_val + 1/(2*fs)):
-            signal.append(1)
+    if type(t) == np.ndarray or type(t) == list:
+        signal = []
+        for time_val in t:
+            if (time_val >= center_time_val - 1/(2*fs)) and (time_val < center_time_val + 1/(2*fs)):
+                print("oh" + str(time_val))
+                signal.append(1)
+            else:
+                signal.append(0)
+        return signal
+    else:  # t must be a number then
+        if (t >= center_time_val - 1/(2*fs)) and (t <= center_time_val + 1/(2*fs)):
+            return 1
         else:
-            signal.append(0)
-    return signal
+            return 0
 
 def u(t):
     if type(t) == np.ndarray or type(t) == list:
@@ -56,11 +64,18 @@ def u(t):
             return 0
 
 def gensignal(t, g, tau=0.025, T=0.1):
-    signal = g(t-tau)
-    for i in range(len(signal)):
-        if t[i] < tau or t[i] >= tau + T:
-            signal[i] = 0
-    return np.array(signal)
+    if type(t) == list or type(t) == np.ndarray:
+        signal = g(t-tau)
+        for i in range(len(signal)):
+            if t[i] < tau or t[i] >= tau + T:
+                signal[i] = 0
+        return np.array(signal)
+    else:
+        if t < tau or t >= tau + T:
+            return 0
+        else:
+            return g(t-tau)
+
 
 def energy(x):
     return np.linalg.norm(x, ord=2)**2
@@ -79,19 +94,21 @@ def noisysignal(t, g, tau=0.025, T=0.1, sigma=1):
             if t_val < tau or t_val >= tau + T:
                 signal.append(noise_val)
             else:
-                signal.append(noise_val + g(t_val))
+                signal.append(noise_val + g(t_val-tau))
         return signal
     else: # for single time values t
         noise_val = np.random.normal(loc=0, scale=sigma)
         if t < tau or t >= tau + T:
             return noise_val
         else:
-            return noise_val + g(t)
+            # CHECK
+            if t-tau == 0:
+                print("t-tau is = 0 at t=" + str(t))
+            return noise_val + g(t-tau)
 
-def plotsignal(g=lambda t: noisysignal(1, g = lambda t: u(t)), tlim=(0, 2*math.pi), tscale=1, tunits="secs", title="Signal"):
+def plotsignal(g=lambda t: noisysignal(1, g = lambda t: u(t)), tlim=(0, 2*math.pi), tscale=1, tunits="secs", title="Signal", show_sampled=False, plotfs=1000, fs=10):
     # g should be an anonymized function
-    t = np.linspace(tlim[0], tlim[1], 2001)
-    t = t
+    t = np.linspace(tlim[0], tlim[1], int((tlim[1]-tlim[0])*plotfs+1))
     signal = []
     for t_val in t:
         signal.append(g(t_val))
@@ -101,7 +118,15 @@ def plotsignal(g=lambda t: noisysignal(1, g = lambda t: u(t)), tlim=(0, 2*math.p
     plt.xlabel("Time ({units})".format(units=tunits))
     plt.ylabel("Amplitude")
     plt.title(title)
-    # plt.legend()
+    if show_sampled:
+        sampled_t = np.linspace(tlim[0], tlim[1], int(((tlim[1]-tlim[0])*fs)+1))
+        sampled_signal = []
+        for sampled_t_val in sampled_t:
+            sampled_signal.append(g(sampled_t_val))
+        markers, stems, base = plt.stem(sampled_t*tscale, sampled_signal, linefmt=purples[2], basefmt=" ", label="sampled signal")
+        plt.setp(markers, 'color', purples[2])
+        plt.setp(markers, 'marker', 'o')
+        plt.legend()
     plt.show()
     return None
 
@@ -127,3 +152,35 @@ def extent(y, theta=0.01):
                 first_thresh_index = i
             last_thresh_index = i
     return first_thresh_index, last_thresh_index    
+
+def compose_sound(filename = "testfile.wav", fmin=10, fmax=10000, sigma=0.1, numgammatones=0):
+    fs = 44100 # Hz
+    T = 3 # seconds
+    t = np.linspace(0, 3, 3*fs+1)
+
+    delays = np.zeros(numgammatones)
+    for i in range(numgammatones):
+        delays[i] = np.random.uniform(0, T)
+    
+    frequencies = np.zeros(numgammatones)
+    for i in range(numgammatones):
+        frequencies[i] = np.random.uniform(fmin, fmax)
+
+    signal = np.zeros(np.size(t))
+    for i in range(np.size(t)):
+        for j in range(numgammatones):
+            signal[i] += gensignal(t[i], g = lambda x: gammatone(x, f=frequencies[j], normalize=False), tau=delays[j], T=T)
+
+    # Normalize the gammatones alone
+    signal = signal/np.max(signal)
+
+    # Add Noise
+    for i in range(np.size(t)):
+        signal[i] += np.random.normal(loc=0, scale=sigma)
+
+    # Normalize again
+    signal = signal/np.max(signal)
+
+    # Write to wave file
+    wavfile.write(filename, fs, signal)
+    return None

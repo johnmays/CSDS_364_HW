@@ -116,9 +116,12 @@ def gammatone(t, n: int = 4, f=1.0, phi=0.0, normalize = False):
     b = 1.019*(24.7*(((4.37*f)/1000) + 1))
     gamma_value = (t**(n-1))*np.exp(-2*np.pi*b*t)*np.cos(2*np.pi*f*t + phi)
     if normalize:
-        return gamma_value / np.amax(np.abs(gamma_value))
+        return gamma_value / gammatone_norm(n=n, f=f)
     else: 
         return gamma_value
+
+def gammatone_norm(n: int = 4, f=1.0):
+    return np.max(np.abs(gammatone(np.linspace(0, 3, 44100*3+1), n=n, f=f, normalize=False)))
 
 
 def plot_gammatone(t, f=1.0, xlim=(0, 0.1)):
