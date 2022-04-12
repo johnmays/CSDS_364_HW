@@ -1,0 +1,1 @@
+please put these directories in the same directory with my jl and ipynb files in order for stuff to work properly

@@ -3,6 +3,7 @@ using Random, Distributions
 using LinearAlgebra
 using WAV
 using DSP
+using FFTW
 
 purples = ["#0a0612", "#392249", "#482980", "#673ab7",
     "#7a52aa", "#9779bd", "#b59fd0", "#d3c5e3"]
@@ -227,4 +228,19 @@ function estimatedelay(signal1, signal2; fs=44100)
     delayinsamples = maxindex - length(signal1)
     delayinseconds = delayinsamples / fs
     return delayinseconds
+end
+
+function mse(x, y)
+    n = length(x)
+    totalsum = sum((x - y) .^ 2)
+    return totalsum / n
+end
+
+function decay(s)
+    x = copy(s)
+    max = maximum(abs.(x))
+    for i in 1:length(x)
+        x[i] = x[i] * ((length(x)-i)/length(x))
+    end
+    return x
 end
