@@ -243,4 +243,4 @@ function decay(s)
         x[i] = x[i] * ((length(x)-i)/length(x))
     end
     return x
-end
+end;
